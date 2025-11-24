@@ -1,0 +1,8 @@
+package com.FlightBooking.enums;
+
+public enum BookingStatus {
+	BOOKED,
+	CANCELLED,
+	PENDING
+
+}

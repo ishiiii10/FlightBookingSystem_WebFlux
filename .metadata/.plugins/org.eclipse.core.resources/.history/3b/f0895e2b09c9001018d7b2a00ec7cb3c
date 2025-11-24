@@ -1,0 +1,5 @@
+package com.FlightBooking.enums;
+
+public enum MealType {
+
+}
