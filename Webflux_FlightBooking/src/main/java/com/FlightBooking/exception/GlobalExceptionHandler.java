@@ -44,6 +44,13 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.CONFLICT)
                 .body(new ErrorResponse(ex.getMessage()));
     }
+    
+    @ExceptionHandler(FlightAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleFlightExists(FlightAlreadyExistsException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)  // 409
+                .body(new ErrorResponse(ex.getMessage()));
+    }
 
     // 4) Generic business logic errors (e.g. source == destination later)
     @ExceptionHandler(IllegalArgumentException.class)

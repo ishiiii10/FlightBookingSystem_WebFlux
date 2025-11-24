@@ -18,6 +18,8 @@ public class FlightResponse {
     private String airlineCode;
     private String airlineName;
     private String airlineLogoUrl;
+    
+    private String flightCode;
 
     private Cities fromCity;
     private Cities toCity;

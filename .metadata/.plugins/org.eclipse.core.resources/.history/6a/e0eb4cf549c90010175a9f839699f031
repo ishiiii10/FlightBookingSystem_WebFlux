@@ -1,0 +1,82 @@
+package com.FlightBooking.controller;
+
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
+import java.net.URI;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import com.FlightBooking.dto.request.AirlineRequest;
+import com.FlightBooking.dto.request.FlightRequest;
+import com.FlightBooking.dto.request.FlightSearchRequest;
+import com.FlightBooking.dto.response.AirlineResponse;
+import com.FlightBooking.dto.response.FlightResponse;
+import com.FlightBooking.service.AirlineService;
+import com.FlightBooking.service.BookingService;
+import com.FlightBooking.service.FlightService;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+@RestController
+@RequestMapping("/api/v1.0/flight")
+@RequiredArgsConstructor
+@Validated
+public class FlightBookingController {
+
+    private final AirlineService airlineService;
+    
+    private final FlightService flightService;
+    private final BookingService bookingService;
+
+    // ---- AIRLINE APIs ----
+
+    @PostMapping("/airline")
+    public Mono<ResponseEntity<AirlineResponse>> createAirline(
+            @Valid @RequestBody AirlineRequest request) {
+
+        return airlineService.createAirline(request)
+                .map(saved -> {
+                    AirlineResponse resp = new AirlineResponse();
+                    resp.setId(saved.getId());
+                    resp.setAirlineCode(saved.getAirlineCode());
+                    // we intentionally DO NOT set name, email, logoUrl
+
+                    return ResponseEntity
+                            .created(URI.create("/api/v1.0/flight/airline/" + saved.getId()))
+                            .body(resp);
+                });
+    }
+
+    @GetMapping("/airline")
+    public Flux<AirlineResponse> getAllAirlines() {
+        return airlineService.getAllAirlines();
+    }
+    
+ // ---- FLIGHT INVENTORY APIs ----
+
+ // Add flight to inventory (201, minimal response)
+ @PostMapping("/airline/inventory")
+ public Mono<ResponseEntity<FlightResponse>> addFlight(
+         @Valid @RequestBody FlightRequest request) {
+
+     return flightService.addFlightToInventory(request)
+             .map(saved -> ResponseEntity
+                     .created(URI.create("/api/v1.0/flight/airline/inventory/" + saved.getId()))
+                     .body(saved));
+ }
+
+ // Search flights (200, full response)
+ @PostMapping("/search")
+ public Flux<FlightResponse> searchFlights(
+         @Valid @RequestBody FlightSearchRequest request) {
+
+     return flightService.searchFlights(request);
+ }
+
+    // other endpoints (inventory, booking, etc.) will be added here later
+}

@@ -1,0 +1,104 @@
+package com.FlightBooking.service.impl;
+
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import com.FlightBooking.dto.request.FlightRequest;
+import com.FlightBooking.dto.request.FlightSearchRequest;
+import com.FlightBooking.dto.response.FlightResponse;
+import com.FlightBooking.entity.FlightInventory;
+import com.FlightBooking.repository.FlightInventoryRepository;
+import com.FlightBooking.service.FlightService;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+@Service
+@RequiredArgsConstructor
+public class FlightServiceImpl implements FlightService {
+
+    private final FlightInventoryRepository flightRepo;
+
+    @Override
+    public Mono<FlightResponse> addFlightToInventory(FlightRequest request) {
+
+        // Business validation: source and destination cannot be same
+        if (request.getFromCity() == request.getToCity()) {
+            throw new IllegalArgumentException("Source and destination cannot be same");
+        }
+
+        // Map DTO -> entity
+        FlightInventory flight = new FlightInventory();
+        flight.setAirlineId(request.getAirlineId());
+        flight.setAirlineCode(request.getAirlineCode());
+        flight.setAirlineName(request.getAirlineName());
+        flight.setAirlineLogoUrl(request.getAirlineLogoUrl());
+
+        flight.setFromCity(request.getFromCity());
+        flight.setToCity(request.getToCity());
+        flight.setDepartureTime(request.getDepartureTime());
+        flight.setPrice(request.getPrice());
+
+        flight.setTotalSeats(request.getTotalSeats());
+        flight.setAvailableSeats(request.getTotalSeats()); // all seats initially available
+
+        return flightRepo.save(flight)
+                .map(this::toResponseMinimal);
+    }
+
+    @Override
+    public Flux<FlightResponse> searchFlights(FlightSearchRequest request) {
+
+        if (request.getFromCity() == request.getToCity()) {
+            throw new IllegalArgumentException("Source and destination cannot be same");
+        }
+
+        LocalDate journeyDate = request.getJourneyDate();
+        LocalDateTime startOfDay = journeyDate.atStartOfDay();
+        LocalDateTime startOfNextDay = journeyDate.plusDays(1).atStartOfDay();
+
+        return flightRepo
+                .findByFromCityAndToCityAndDepartureTimeBetween(
+                        request.getFromCity(),
+                        request.getToCity(),
+                        startOfDay,
+                        startOfNextDay
+                )
+                .map(this::toResponseFull);
+    }
+
+    // ---------- Mapping helpers ----------
+
+    // For create: return minimal details
+    private FlightResponse toResponseMinimal(FlightInventory flight) {
+        FlightResponse resp = new FlightResponse();
+        resp.setId(flight.getId());
+        resp.setAirlineCode(flight.getAirlineCode());
+        // you can add fromCity/toCity if you want, but keeping minimal now
+        return resp;
+    }
+
+    // For search: return full details
+    private FlightResponse toResponseFull(FlightInventory flight) {
+        FlightResponse resp = new FlightResponse();
+        resp.setId(flight.getId());
+        resp.setAirlineId(flight.getAirlineId());
+        resp.setAirlineCode(flight.getAirlineCode());
+        resp.setAirlineName(flight.getAirlineName());
+        resp.setAirlineLogoUrl(flight.getAirlineLogoUrl());
+
+        resp.setFromCity(flight.getFromCity());
+        resp.setToCity(flight.getToCity());
+        resp.setDepartureTime(flight.getDepartureTime());
+
+        resp.setPrice(flight.getPrice());
+        resp.setTotalSeats(flight.getTotalSeats());
+        resp.setAvailableSeats(flight.getAvailableSeats());
+
+        return resp;
+    }
+}

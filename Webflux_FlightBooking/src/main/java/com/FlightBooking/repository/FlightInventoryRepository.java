@@ -8,6 +8,7 @@ import com.FlightBooking.entity.FlightInventory;
 import com.FlightBooking.enums.Cities;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 
@@ -20,4 +21,7 @@ public interface FlightInventoryRepository extends ReactiveMongoRepository<Fligh
             LocalDateTime start,
             LocalDateTime end
     );
+    
+    Mono<Boolean> existsByFlightCode(String flightCode);
 }
+

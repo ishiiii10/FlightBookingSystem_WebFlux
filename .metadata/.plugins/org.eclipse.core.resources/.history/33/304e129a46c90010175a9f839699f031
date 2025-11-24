@@ -1,0 +1,18 @@
+spring.application.name=Webflux_FlightBooking
+# ------------------------
+# APPLICATION CONFIG
+# ------------------------
+
+server.port=9000
+
+# ------------------------
+# MONGO CONFIG
+# ------------------------
+spring.data.mongodb.database=flightdb
+spring.data.mongodb.uri=mongodb://localhost:27017/flightdb
+
+# ------------------------
+# LOGGING
+# ------------------------
+logging.level.org.springframework.data.mongodb.core=DEBUG
+logging.level.org.springframework.web=DEBUG

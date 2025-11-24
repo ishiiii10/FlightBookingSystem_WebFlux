@@ -1,0 +1,119 @@
+package com.FlightBooking.service.impl;
+
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import com.FlightBooking.dto.request.FlightRequest;
+import com.FlightBooking.dto.request.FlightSearchRequest;
+import com.FlightBooking.dto.response.FlightResponse;
+import com.FlightBooking.entity.FlightInventory;
+import com.FlightBooking.enums.Cities;
+import com.FlightBooking.exception.FlightAlreadyExistsException;
+import com.FlightBooking.repository.FlightInventoryRepository;
+import com.FlightBooking.service.FlightService;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+@Service
+@RequiredArgsConstructor
+public class FlightServiceImpl implements FlightService {
+
+    private final FlightInventoryRepository flightRepo;
+
+    @Override
+    public Mono<FlightResponse> addFlightToInventory(FlightRequest request) {
+
+        // Business rule: source and destination cannot be same
+        if (request.getFromCity() == request.getToCity()) {
+            return Mono.error(new IllegalArgumentException("Source and destination cannot be same"));
+        }
+
+        // Extra safety: totalSeats must be >= 1 (also checked by @Min)
+        if (request.getTotalSeats() < 1) {
+            return Mono.error(new IllegalArgumentException("Total seats must be at least 1"));
+        }
+
+        // Check for duplicate flight
+        return flightRepo.existsByAirlineIdAndFromCityAndToCityAndDepartureTime(
+                        request.getAirlineId(),
+                        request.getFromCity(),
+                        request.getToCity(),
+                        request.getDepartureTime()
+                )
+                .flatMap(exists -> {
+                    if (exists) {
+                        return Mono.error(new FlightAlreadyExistsException(
+                                "Flight already exists for this airline, route and time"));
+                    }
+
+                    // Create new inventory record
+                    FlightInventory fi = new FlightInventory();
+                    fi.setAirlineId(request.getAirlineId());
+                    fi.setAirlineCode(request.getAirlineCode());
+                    fi.setAirlineName(request.getAirlineName());
+                    fi.setAirlineLogoUrl(request.getAirlineLogoUrl());
+                    fi.setFromCity(request.getFromCity());
+                    fi.setToCity(request.getToCity());
+                    fi.setDepartureTime(request.getDepartureTime());
+                    fi.setPrice(request.getPrice());
+                    fi.setTotalSeats(request.getTotalSeats());
+                    fi.setAvailableSeats(request.getTotalSeats());
+
+                    return flightRepo.save(fi)
+                            .map(this::toResponseForCreate);
+                });
+    }
+
+    @Override
+    public Flux<FlightResponse> searchFlights(FlightSearchRequest request) {
+
+        Cities from = request.getFromCity();
+        Cities to = request.getToCity();
+
+        if (from == to) {
+            return Flux.error(new IllegalArgumentException("Source and destination cannot be same"));
+        }
+
+        LocalDate journeyDate = request.getJourneyDate();
+        LocalDateTime startOfDay = journeyDate.atStartOfDay();
+        LocalDateTime endOfDay = journeyDate.plusDays(1).atStartOfDay();
+
+        return flightRepo
+                .findByFromCityAndToCityAndDepartureTimeBetween(from, to, startOfDay, endOfDay)
+                .map(this::toFullResponse);
+    }
+
+    // For create: minimal response (id + airlineCode + from/to + departure)
+    private FlightResponse toResponseForCreate(FlightInventory fi) {
+        FlightResponse resp = new FlightResponse();
+        resp.setId(fi.getId());
+        resp.setAirlineId(fi.getAirlineId());
+        resp.setAirlineCode(fi.getAirlineCode());
+        resp.setFromCity(fi.getFromCity());
+        resp.setToCity(fi.getToCity());
+        resp.setDepartureTime(fi.getDepartureTime());
+        return resp;
+    }
+
+    // For search: full response with price, seats, etc.
+    private FlightResponse toFullResponse(FlightInventory fi) {
+        FlightResponse resp = new FlightResponse();
+        resp.setId(fi.getId());
+        resp.setAirlineId(fi.getAirlineId());
+        resp.setAirlineCode(fi.getAirlineCode());
+        resp.setAirlineName(fi.getAirlineName());
+        resp.setAirlineLogoUrl(fi.getAirlineLogoUrl());
+        resp.setFromCity(fi.getFromCity());
+        resp.setToCity(fi.getToCity());
+        resp.setDepartureTime(fi.getDepartureTime());
+        resp.setPrice(fi.getPrice());
+        resp.setTotalSeats(fi.getTotalSeats());
+        resp.setAvailableSeats(fi.getAvailableSeats());
+        return resp;
+    }
+}
