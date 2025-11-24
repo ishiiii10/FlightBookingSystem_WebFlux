@@ -1,0 +1,5 @@
+package com.FlightBooking.service.impl;
+
+public class AirlineServiceImpl {
+
+}

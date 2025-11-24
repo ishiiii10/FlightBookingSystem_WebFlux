@@ -18,8 +18,8 @@ public class FlightInventory {
 	private String airlineName;       
     private String airlineLogoUrl;    
 
-    private String fromPlace;
-    private String toPlace;
+    private String fromCity;
+    private String toCity;
 
     private LocalDateTime departureTime;
 

@@ -19,6 +19,6 @@ public class Airline {
     private String logoUrl; 
     private String email;
     
-    private boolean active;
+    private boolean active=true;
     
 }

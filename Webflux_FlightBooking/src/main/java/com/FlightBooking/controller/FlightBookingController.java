@@ -1,0 +1,53 @@
+package com.FlightBooking.controller;
+
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
+import java.net.URI;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import com.FlightBooking.dto.request.AirlineRequest;
+import com.FlightBooking.dto.response.AirlineResponse;
+import com.FlightBooking.service.AirlineService;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+@RestController
+@RequestMapping("/api/v1.0/flight")
+@RequiredArgsConstructor
+@Validated
+public class FlightBookingController {
+
+    private final AirlineService airlineService;
+
+    // ---- AIRLINE APIs ----
+
+    @PostMapping("/airline")
+    public Mono<ResponseEntity<AirlineResponse>> createAirline(
+            @Valid @RequestBody AirlineRequest request) {
+
+        return airlineService.createAirline(request)
+                .map(saved -> {
+                    AirlineResponse resp = new AirlineResponse();
+                    resp.setId(saved.getId());
+                    resp.setAirlineCode(saved.getAirlineCode());
+                    // we intentionally DO NOT set name, email, logoUrl
+
+                    return ResponseEntity
+                            .created(URI.create("/api/v1.0/flight/airline/" + saved.getId()))
+                            .body(resp);
+                });
+    }
+
+    @GetMapping("/airline")
+    public Flux<AirlineResponse> getAllAirlines() {
+        return airlineService.getAllAirlines();
+    }
+
+    // other endpoints (inventory, booking, etc.) will be added here later
+}

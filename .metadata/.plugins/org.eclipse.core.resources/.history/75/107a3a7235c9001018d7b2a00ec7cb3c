@@ -1,0 +1,37 @@
+package com.FlightBooking.controller;
+
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import com.FlightBooking.dto.request.AirlineRequest;
+import com.FlightBooking.dto.response.AirlineResponse;
+import com.FlightBooking.service.AirlineService;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+@RestController
+@RequestMapping("/api/v1.0/flight")
+@RequiredArgsConstructor
+@Validated
+public class FlightBookingController {
+
+    private final AirlineService airlineService;
+
+    // ---- AIRLINE APIs ----
+
+    @PostMapping("/airline")
+    public Mono<AirlineResponse> createAirline(@Valid @RequestBody AirlineRequest request) {
+        return airlineService.createAirline(request);
+    }
+
+    @GetMapping("/airline")
+    public Flux<AirlineResponse> getAllAirlines() {
+        return airlineService.getAllAirlines();
+    }
+
+    // other endpoints (inventory, booking, etc.) will be added here later
+}

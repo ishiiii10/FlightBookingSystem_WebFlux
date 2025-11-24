@@ -6,7 +6,11 @@ import org.springframework.stereotype.Repository;
 
 import com.FlightBooking.entity.Airline;
 
+import reactor.core.publisher.Mono;
+
 @Repository
 public interface AirlineRepository extends ReactiveMongoRepository<Airline, String> {
+	Mono<Airline> findByAirlineCode(String airlineCode);
+	
    
 }

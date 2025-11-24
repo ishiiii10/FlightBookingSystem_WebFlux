@@ -1,0 +1,16 @@
+package com.FlightBooking.dto.response;
+
+
+
+import lombok.Data;
+
+@Data
+public class AirlineResponse {
+
+    private String id;
+    private String airlineCode;
+    private String name;
+    private String logoUrl;
+    private String email;
+    private boolean active;
+}
