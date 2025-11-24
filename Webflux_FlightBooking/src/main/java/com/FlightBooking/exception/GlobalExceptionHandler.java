@@ -39,7 +39,7 @@ public class GlobalExceptionHandler {
     // 3) Airline already exists
     @ExceptionHandler(AirlineAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleAirlineExists(AirlineAlreadyExistsException ex) {
-        // You wanted 404, so we return NOT_FOUND.
+        
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(new ErrorResponse(ex.getMessage()));

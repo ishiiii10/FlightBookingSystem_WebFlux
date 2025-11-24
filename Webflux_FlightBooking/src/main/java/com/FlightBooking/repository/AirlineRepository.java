@@ -10,7 +10,6 @@ import reactor.core.publisher.Mono;
 
 @Repository
 public interface AirlineRepository extends ReactiveMongoRepository<Airline, String> {
-	Mono<Airline> findByAirlineCode(String airlineCode);
-	
-   
+
+    Mono<Boolean> existsByAirlineCode(String airlineCode);
 }
