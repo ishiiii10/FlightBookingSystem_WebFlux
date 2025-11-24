@@ -11,8 +11,14 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Airline {
 
     @Id
-    private String id;          // MongoDB _id
+    private String id; 
+    
+    private String airlineCode;
 
-    private String name;        // Airline name
-    private String logoUrl;     // Airline logo URL or path
+    private String name;        
+    private String logoUrl; 
+    private String email;
+    
+    private boolean active;
+    
 }

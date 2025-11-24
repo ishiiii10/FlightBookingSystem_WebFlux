@@ -1,0 +1,29 @@
+package com.FlightBooking.entity;
+
+import java.time.LocalDateTime;
+import lombok.Data;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+@Data
+@Document(collection="flight_inventory")
+public class FlightInventory {
+	@Id
+	public String id;
+	private String airlineId;
+	private String airlineCode;
+	private String airlineName;       // For quick display
+    private String airlineLogoUrl;    // Optional
+
+    private String fromPlace;
+    private String toPlace;
+
+    private LocalDateTime departureTime;
+
+    private float price;              // Using float as you requested
+
+    private int totalSeats;
+    private int availableSeats;
+
+}

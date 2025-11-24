@@ -1,0 +1,39 @@
+package com.FlightBooking.entity;
+
+
+
+
+import lombok.Data;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+import com.FlightBooking.enums.BookingStatus;
+import com.FlightBooking.enums.MealType;
+import com.FlightBooking.enums.TripType;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Data
+@Document(collection = "bookings")
+public class Booking {
+
+    @Id
+    private String pnr;                // This is the PNR
+
+    private String flightId;           // Reference to FlightInventory.id
+    private String userEmail;          // User who booked (login email)
+
+    private TripType tripType;         // ONE_WAY / ROUND_TRIP
+    private MealType mealType;         // VEG / NON_VEG / NONE
+    private BookingStatus status;      // PENDING / BOOKED / CANCELLED
+
+    private LocalDate journeyDate;
+    private LocalDate returnDate;      // null for one-way
+
+    private int numberOfSeats;
+    private List<Passenger> passengers; // Contains seatNumber, contact, email etc.
+
+    private LocalDateTime bookingDateTime;
+}
