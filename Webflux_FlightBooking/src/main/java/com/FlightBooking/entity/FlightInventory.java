@@ -28,7 +28,7 @@ public class FlightInventory {
 
     private LocalDateTime departureTime;
 
-    private float price;              
+    private float price;     // using wrapper         
     
     
     private int totalSeats;

@@ -1,0 +1,5 @@
+package com.FlightBooking.dto.response;
+
+public class FlightSearchResultResponse {
+
+}

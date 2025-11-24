@@ -15,6 +15,7 @@ import com.FlightBooking.dto.request.FlightRequest;
 import com.FlightBooking.dto.request.FlightSearchRequest;
 import com.FlightBooking.dto.response.AirlineResponse;
 import com.FlightBooking.dto.response.FlightResponse;
+import com.FlightBooking.dto.response.FlightSearchResultResponse;
 import com.FlightBooking.service.AirlineService;
 import com.FlightBooking.service.BookingService;
 import com.FlightBooking.service.FlightService;
@@ -72,7 +73,7 @@ public class FlightBookingController {
 
  // Search flights (200, full response)
  @PostMapping("/search")
- public Flux<FlightResponse> searchFlights(
+ public Mono<FlightSearchResultResponse> searchFlights(
          @Valid @RequestBody FlightSearchRequest request) {
 
      return flightService.searchFlights(request);

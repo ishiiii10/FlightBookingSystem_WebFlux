@@ -8,8 +8,10 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 import com.FlightBooking.enums.Cities;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class FlightResponse {
 
     private String id;
@@ -26,8 +28,8 @@ public class FlightResponse {
 
     private LocalDateTime departureTime;
 
-    private float price;
+    private Float price;
 
-    private int totalSeats;
-    private int availableSeats;
+    private Integer totalSeats;
+    private Integer availableSeats;
 }

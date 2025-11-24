@@ -7,8 +7,10 @@ import org.springframework.stereotype.Service;
 import com.FlightBooking.dto.request.FlightRequest;
 import com.FlightBooking.dto.request.FlightSearchRequest;
 import com.FlightBooking.dto.response.FlightResponse;
+import com.FlightBooking.dto.response.FlightSearchResultResponse;
 import com.FlightBooking.entity.FlightInventory;
 import com.FlightBooking.enums.Cities;
+import com.FlightBooking.enums.TripType;
 import com.FlightBooking.exception.FlightAlreadyExistsException;
 import com.FlightBooking.repository.FlightInventoryRepository;
 import com.FlightBooking.service.FlightService;
@@ -63,24 +65,86 @@ public class FlightServiceImpl implements FlightService {
     }
 
     @Override
-    public Flux<FlightResponse> searchFlights(FlightSearchRequest request) {
-        // same as before, but mapping toFullResponse
+    public Mono<FlightSearchResultResponse> searchFlights(FlightSearchRequest request) {
+
         if (request.getFromCity() == request.getToCity()) {
-            return Flux.error(new IllegalArgumentException("Source and destination cannot be same"));
+            return Mono.error(new IllegalArgumentException("Source and destination cannot be same"));
         }
 
-        LocalDate journeyDate = request.getJourneyDate();
-        LocalDateTime startOfDay = journeyDate.atStartOfDay();
-        LocalDateTime endOfDay = journeyDate.plusDays(1).atStartOfDay();
+        if (request.getTripType() == null) {
+            return Mono.error(new IllegalArgumentException("Trip type is required"));
+        }
 
-        return flightRepo
+        // ONE_WAY search
+        if (request.getTripType().name().equals("ONE_WAY")) {
+
+            var date = request.getJourneyDate();
+            var startOfDay = date.atStartOfDay();
+            var endOfDay = date.plusDays(1).atStartOfDay();
+
+            return flightRepo
+                    .findByFromCityAndToCityAndDepartureTimeBetween(
+                            request.getFromCity(),
+                            request.getToCity(),
+                            startOfDay,
+                            endOfDay
+                    )
+                    .map(this::toFullResponse)
+                    .collectList()
+                    .map(list -> {
+                        FlightSearchResultResponse resp = new FlightSearchResultResponse();
+                        resp.setTripType(request.getTripType());
+                        resp.setOnwardFlights(list);
+                        resp.setReturnFlights(null);
+                        return resp;
+                    });
+        }
+
+        // ROUND_TRIP search
+        // validate return date
+        if (request.getReturnDate() == null) {
+            return Mono.error(new IllegalArgumentException("Return date is required for round trip"));
+        }
+        if (!request.getReturnDate().isAfter(request.getJourneyDate())) {
+            return Mono.error(new IllegalArgumentException("Return date must be after journey date"));
+        }
+
+        // onward leg
+        var onwardStart = request.getJourneyDate().atStartOfDay();
+        var onwardEnd = request.getJourneyDate().plusDays(1).atStartOfDay();
+
+        // return leg (reverse route)
+        var returnStart = request.getReturnDate().atStartOfDay();
+        var returnEnd = request.getReturnDate().plusDays(1).atStartOfDay();
+
+        var onwardFlux = flightRepo
                 .findByFromCityAndToCityAndDepartureTimeBetween(
                         request.getFromCity(),
                         request.getToCity(),
-                        startOfDay,
-                        endOfDay
+                        onwardStart,
+                        onwardEnd
                 )
-                .map(this::toFullResponse);
+                .map(this::toFullResponse)
+                .collectList();
+
+        var returnFlux = flightRepo
+                .findByFromCityAndToCityAndDepartureTimeBetween(
+                        request.getToCity(),          // swapped
+                        request.getFromCity(),
+                        returnStart,
+                        returnEnd
+                )
+                .map(this::toFullResponse)
+                .collectList();
+
+        return Mono.zip(onwardFlux, returnFlux)
+                .map(tuple -> {
+                    FlightSearchResultResponse resp = new FlightSearchResultResponse();
+                    resp.setTripType(request.getTripType());
+                    resp.setOnwardFlights(tuple.getT1());
+                    resp.setReturnFlights(tuple.getT2());
+                    return resp;
+                });
     }
 
     // ---- mapping helpers ----
@@ -88,16 +152,8 @@ public class FlightServiceImpl implements FlightService {
     private FlightResponse toResponseForCreate(FlightInventory fi) {
         FlightResponse resp = new FlightResponse();
         resp.setId(fi.getId());
-        resp.setAirlineId(fi.getAirlineId());
-        resp.setAirlineCode(fi.getAirlineCode());
-        resp.setAirlineName(fi.getAirlineName());
         resp.setFlightCode(fi.getFlightCode());
-        resp.setFromCity(fi.getFromCity());
-        resp.setToCity(fi.getToCity());
-        resp.setDepartureTime(fi.getDepartureTime());
-        resp.setPrice(fi.getPrice());
-        resp.setTotalSeats(fi.getTotalSeats());
-        resp.setAvailableSeats(fi.getAvailableSeats());
+        // DO NOT set price / seats / anything else here
         return resp;
     }
 
