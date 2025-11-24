@@ -11,7 +11,7 @@ import lombok.Data;
 public class AirlineRequest {
 
     @NotBlank(message = "Airline code is required")
-    @Size(max = 10, message = "Airline code must be at most 10 characters")
+    @Size(min = 2, max=5, message = "Airline code must be between 2 to 5 characters")
     private String airlineCode;    // e.g. "AI", "6E"
 
     @NotBlank(message = "Airline name is required")
