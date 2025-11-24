@@ -1,6 +1,7 @@
 package com.FlightBooking.service.impl;
 
 import com.FlightBooking.dto.request.BookingRequest;
+
 import com.FlightBooking.dto.request.PassengerRequest;
 import com.FlightBooking.dto.response.BookingResponse;
 import com.FlightBooking.dto.response.PassengerResponse;
@@ -16,8 +17,6 @@ import com.FlightBooking.repository.AirlineRepository;
 import com.FlightBooking.repository.BookingRepository;
 import com.FlightBooking.repository.FlightInventoryRepository;
 import com.FlightBooking.service.BookingService;
-import com.FlightBooking.exception.*;
-
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -122,6 +121,7 @@ public class BookingServiceImpl implements BookingService {
 		return p;
 	}
 
+	@SuppressWarnings("unused")
 	private PassengerResponse toPassengerResponse(Passenger p) {
 		PassengerResponse resp = new PassengerResponse();
 		resp.setName(p.getName());

@@ -1,6 +1,7 @@
 package com.FlightBooking.service.impl;
 
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
 
 import com.FlightBooking.dto.request.FlightRequest;
@@ -8,17 +9,15 @@ import com.FlightBooking.dto.request.FlightSearchRequest;
 import com.FlightBooking.dto.response.FlightResponse;
 import com.FlightBooking.dto.response.FlightSearchResultResponse;
 import com.FlightBooking.entity.FlightInventory;
-import com.FlightBooking.enums.Cities;
-import com.FlightBooking.enums.TripType;
+
 import com.FlightBooking.exception.FlightAlreadyExistsException;
 import com.FlightBooking.repository.FlightInventoryRepository;
 import com.FlightBooking.service.FlightService;
 
-import reactor.core.publisher.Flux;
+
 import reactor.core.publisher.Mono;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+
 
 @Service
 @RequiredArgsConstructor

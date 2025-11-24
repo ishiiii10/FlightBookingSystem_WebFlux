@@ -2,6 +2,7 @@ package com.FlightBooking.entity;
 
 import java.time.LocalDateTime;
 
+
 import lombok.Data;
 
 import org.springframework.data.annotation.Id;
@@ -9,7 +10,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.FlightBooking.enums.Cities;
 
-import jakarta.validation.constraints.Min;
 
 @Data
 @Document(collection = "flight_inventory")

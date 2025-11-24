@@ -5,7 +5,7 @@ import com.FlightBooking.dto.request.PassengerRequest;
 import com.FlightBooking.dto.response.BookingResponse;
 import com.FlightBooking.entity.Booking;
 import com.FlightBooking.entity.FlightInventory;
-import com.FlightBooking.entity.Passenger;
+
 import com.FlightBooking.enums.BookingStatus;
 import com.FlightBooking.enums.Cities;
 import com.FlightBooking.enums.Gender;
