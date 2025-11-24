@@ -6,6 +6,8 @@ import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import jakarta.validation.constraints.Min;
+
 @Data
 @Document(collection="flight_inventory")
 public class FlightInventory {
@@ -24,6 +26,7 @@ public class FlightInventory {
     private float price;              
 
     private int totalSeats;
+    @Min(value = 0, message = "Available seats cannot be negative")
     private int availableSeats;
 
 }
