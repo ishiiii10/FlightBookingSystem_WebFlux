@@ -11,8 +11,8 @@ import reactor.core.publisher.Mono;
 @Repository
 public interface BookingRepository extends ReactiveMongoRepository<Booking, String> {
 
-    Flux<Booking> findByUserEmail(String userEmail);
-    
- // Explicit method: get booking by PNR
-    Mono<Booking> findByPnr(String pnr);
+	Flux<Booking> findByUserEmail(String userEmail);
+
+	// Explicit method: get booking by PNR
+	Mono<Booking> findByPnr(String pnr);
 }

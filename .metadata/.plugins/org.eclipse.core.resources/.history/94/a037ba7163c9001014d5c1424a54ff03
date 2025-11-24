@@ -1,0 +1,82 @@
+package com.FlightBooking.service;
+
+
+
+import com.FlightBooking.dto.request.AirlineRequest;
+import com.FlightBooking.dto.response.AirlineResponse;
+import com.FlightBooking.entity.Airline;
+import com.FlightBooking.exception.AirlineAlreadyExistsException;
+import com.FlightBooking.repository.AirlineRepository;
+import com.FlightBooking.service.impl.AirlineServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+class AirlineServiceTest {
+
+    @Mock
+    private AirlineRepository airlineRepository;
+
+    @InjectMocks
+    private AirlineServiceImpl airlineService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    private AirlineRequest buildRequest() {
+        AirlineRequest req = new AirlineRequest();
+        req.setAirlineCode("AI");
+        req.setName("AirIndia");
+        req.setEmail("support@airindia.in");
+        req.setLogoUrl("https://example.com/logo.png");
+        req.setActive(true);
+        return req;
+    }
+
+    @Test
+    void createAirline_success() {
+        AirlineRequest req = buildRequest();
+
+        Airline saved = new Airline();
+        saved.setId("123");
+        saved.setAirlineCode("AI");
+        saved.setName("AirIndia");
+        saved.setEmail("support@airindia.in");
+        saved.setActive(true);
+
+        // no existing airline with same code
+        when(airlineRepository.existsByAirlineCode("AI")).thenReturn(Mono.just(false));
+        when(airlineRepository.save(any(Airline.class))).thenReturn(Mono.just(saved));
+
+        Mono<AirlineResponse> result = airlineService.createAirline(req);
+
+        StepVerifier.create(result)
+                .expectNextMatches(resp ->
+                        "123".equals(resp.getId()) &&
+                        "AI".equals(resp.getAirlineCode()))
+                .verifyComplete();
+    }
+
+    @Test
+    void createAirline_duplicateCode_throwsException() {
+        AirlineRequest req = buildRequest();
+
+        // airline with code AI already exists
+        when(airlineRepository.existsByAirlineCode("AI")).thenReturn(Mono.just(true));
+
+        Mono<AirlineResponse> result = airlineService.createAirline(req);
+
+        StepVerifier.create(result)
+                .expectError(AirlineAlreadyExistsException.class)
+                .verify();
+    }
+}

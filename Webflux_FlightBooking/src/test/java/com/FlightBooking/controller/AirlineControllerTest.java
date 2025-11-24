@@ -1,0 +1,60 @@
+package com.FlightBooking.controller;
+
+import com.FlightBooking.dto.request.AirlineRequest;
+import com.FlightBooking.dto.response.AirlineResponse;
+import com.FlightBooking.service.AirlineService;
+import com.FlightBooking.service.BookingService;
+import com.FlightBooking.service.FlightService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Mono;
+
+@ExtendWith(MockitoExtension.class)
+class AirlineControllerTest {
+
+	private WebTestClient webTestClient;
+
+	@Mock
+	private AirlineService airlineService;
+
+	@Mock
+	private FlightService flightService;
+
+	@Mock
+	private BookingService bookingService;
+
+	@BeforeEach
+	void setup() {
+		// Create controller manually and attach WebTestClient
+		FlightBookingController controller = new FlightBookingController(airlineService, flightService, bookingService);
+
+		webTestClient = WebTestClient.bindToController(controller).build();
+	}
+
+	@Test
+	void createAirline_returns201AndBody() {
+
+		AirlineRequest req = new AirlineRequest();
+		req.setAirlineCode("AI");
+		req.setName("AirIndia");
+		req.setEmail("support@airindia.in");
+		req.setLogoUrl("https://example.com/logo.png");
+		req.setActive(true);
+
+		AirlineResponse resp = new AirlineResponse();
+		resp.setId("123");
+		resp.setAirlineCode("AI");
+
+		Mockito.when(airlineService.createAirline(Mockito.any(AirlineRequest.class))).thenReturn(Mono.just(resp));
+
+		webTestClient.post().uri("/api/v1.0/flight/airline").contentType(MediaType.APPLICATION_JSON).bodyValue(req)
+				.exchange().expectStatus().isCreated().expectBody().jsonPath("$.id").isEqualTo("123")
+				.jsonPath("$.airlineCode").isEqualTo("AI");
+	}
+}

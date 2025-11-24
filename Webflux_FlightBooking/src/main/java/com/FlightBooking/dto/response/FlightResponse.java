@@ -1,8 +1,5 @@
 package com.FlightBooking.dto.response;
 
-
-
-
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -14,22 +11,22 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class FlightResponse {
 
-    private String id;
+	private String id;
 
-    private String airlineId;
-    private String airlineCode;
-    private String airlineName;
-    private String airlineLogoUrl;
-    
-    private String flightCode;
+	private String airlineId;
+	private String airlineCode;
+	private String airlineName;
+	private String airlineLogoUrl;
 
-    private Cities fromCity;
-    private Cities toCity;
+	private String flightCode;
 
-    private LocalDateTime departureTime;
+	private Cities fromCity;
+	private Cities toCity;
 
-    private Float price;
+	private LocalDateTime departureTime;
 
-    private Integer totalSeats;
-    private Integer availableSeats;
+	private Float price;
+
+	private Integer totalSeats;
+	private Integer availableSeats;
 }

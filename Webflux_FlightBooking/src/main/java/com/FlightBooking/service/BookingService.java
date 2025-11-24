@@ -1,7 +1,5 @@
 package com.FlightBooking.service;
 
-
-
 import com.FlightBooking.dto.request.BookingRequest;
 import com.FlightBooking.dto.response.BookingResponse;
 import com.FlightBooking.dto.response.TicketDetailResponse;
@@ -11,11 +9,11 @@ import reactor.core.publisher.Mono;
 
 public interface BookingService {
 
-    Mono<BookingResponse> bookTicket(String flightId, BookingRequest request);
+	Mono<BookingResponse> bookTicket(String flightId, BookingRequest request);
 
-    Mono<TicketDetailResponse> getTicketDetails(String pnr);
+	Mono<TicketDetailResponse> getTicketDetails(String pnr);
 
-    Flux<TicketDetailResponse> getBookingHistory(String emailId);
+	Flux<TicketDetailResponse> getBookingHistory(String emailId);
 
-    Mono<BookingResponse> cancelBooking(String pnr);
+	Mono<BookingResponse> cancelBooking(String pnr);
 }

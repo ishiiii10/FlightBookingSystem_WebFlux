@@ -12,28 +12,26 @@ import com.FlightBooking.enums.Cities;
 import jakarta.validation.constraints.Min;
 
 @Data
-@Document(collection="flight_inventory")
+@Document(collection = "flight_inventory")
 public class FlightInventory {
 	@Id
 	public String id;
 	private String airlineId;
 	private String airlineCode;
-	private String airlineName;       
-    private String airlineLogoUrl;   
-    
-    private String flightCode; 
+	private String airlineName;
+	private String airlineLogoUrl;
 
-    private Cities fromCity;
-    private Cities toCity;
+	private String flightCode;
 
-    private LocalDateTime departureTime;
+	private Cities fromCity;
+	private Cities toCity;
 
-    private float price;     // using wrapper         
-    
-    
-    private int totalSeats;
-    
-    
-    private int availableSeats;
+	private LocalDateTime departureTime;
+
+	private float price; // using wrapper
+
+	private int totalSeats;
+
+	private int availableSeats;
 
 }

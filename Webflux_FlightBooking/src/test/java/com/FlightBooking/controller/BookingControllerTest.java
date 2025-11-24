@@ -1,0 +1,112 @@
+package com.FlightBooking.controller;
+
+import com.FlightBooking.dto.request.BookingRequest;
+import com.FlightBooking.dto.request.PassengerRequest;
+import com.FlightBooking.dto.response.BookingResponse;
+import com.FlightBooking.dto.response.TicketDetailResponse;
+import com.FlightBooking.enums.BookingStatus;
+import com.FlightBooking.enums.Gender;
+import com.FlightBooking.enums.MealType;
+import com.FlightBooking.enums.TripType;
+import com.FlightBooking.service.AirlineService;
+import com.FlightBooking.service.BookingService;
+import com.FlightBooking.service.FlightService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Mono;
+
+import java.time.LocalDate;
+import java.util.List;
+
+@ExtendWith(MockitoExtension.class)
+class BookingControllerTest {
+
+	private WebTestClient webTestClient;
+
+	@Mock
+	private AirlineService airlineService;
+
+	@Mock
+	private FlightService flightService;
+
+	@Mock
+	private BookingService bookingService;
+
+	@BeforeEach
+	void setup() {
+		FlightBookingController controller = new FlightBookingController(airlineService, flightService, bookingService);
+
+		webTestClient = WebTestClient.bindToController(controller).build();
+	}
+
+	private BookingRequest buildRequest() {
+		BookingRequest req = new BookingRequest();
+		req.setUserEmail("user@example.com");
+		req.setTripType(TripType.ONE_WAY);
+		req.setMealType(MealType.VEG);
+		req.setJourneyDate(LocalDate.now().plusDays(5));
+		req.setReturnDate(null);
+		req.setNumberOfSeats(1);
+
+		PassengerRequest p = new PassengerRequest();
+		p.setName("Amit");
+		p.setAge(25);
+		p.setGender(Gender.MALE);
+		p.setEmail("amit@example.com");
+		p.setContactNumber("9876543210");
+		p.setSeatNumber("12A");
+
+		req.setPassengers(List.of(p));
+		return req;
+	}
+
+	@Test
+	void bookTicket_returns201WithPnrAndStatus() {
+		BookingRequest req = buildRequest();
+
+		BookingResponse resp = new BookingResponse();
+		resp.setPnr("ABC12345");
+		resp.setStatus(BookingStatus.BOOKED);
+
+		Mockito.when(bookingService.bookTicket(Mockito.eq("FLIGHT_ID"), Mockito.any(BookingRequest.class)))
+				.thenReturn(Mono.just(resp));
+
+		webTestClient.post().uri("/api/v1.0/flight/booking/FLIGHT_ID").contentType(MediaType.APPLICATION_JSON)
+				.bodyValue(req).exchange().expectStatus().isCreated().expectBody().jsonPath("$.pnr")
+				.isEqualTo("ABC12345").jsonPath("$.status").isEqualTo("BOOKED");
+	}
+
+	@Test
+	void cancelBooking_returns200WithCancelledStatus() {
+		BookingResponse resp = new BookingResponse();
+		resp.setPnr("ABC12345");
+		resp.setStatus(BookingStatus.CANCELLED);
+
+		Mockito.when(bookingService.cancelBooking("ABC12345")).thenReturn(Mono.just(resp));
+
+		webTestClient.delete().uri("/api/v1.0/flight/booking/cancel/ABC12345").exchange().expectStatus().isOk()
+				.expectBody().jsonPath("$.pnr").isEqualTo("ABC12345").jsonPath("$.status").isEqualTo("CANCELLED");
+	}
+
+	@Test
+	void getTicket_returns200WithTicketDetails() {
+		TicketDetailResponse resp = new TicketDetailResponse();
+		resp.setPnr("ABC12345");
+		resp.setStatus(BookingStatus.BOOKED);
+		resp.setFlightCode("AI201");
+		resp.setAirlineName("AirIndia");
+		// you can set more fields if you want
+
+		Mockito.when(bookingService.getTicketDetails("ABC12345")).thenReturn(Mono.just(resp));
+
+		webTestClient.get().uri("/api/v1.0/flight/ticket/ABC12345").exchange().expectStatus().isOk().expectBody()
+				.jsonPath("$.pnr").isEqualTo("ABC12345").jsonPath("$.status").isEqualTo("BOOKED")
+				.jsonPath("$.flightCode").isEqualTo("AI201");
+	}
+}

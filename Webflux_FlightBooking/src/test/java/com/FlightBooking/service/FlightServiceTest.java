@@ -1,0 +1,140 @@
+package com.FlightBooking.service;
+
+import com.FlightBooking.dto.request.FlightRequest;
+import com.FlightBooking.dto.request.FlightSearchRequest;
+import com.FlightBooking.dto.response.FlightResponse;
+import com.FlightBooking.dto.response.FlightSearchResultResponse;
+import com.FlightBooking.entity.FlightInventory;
+import com.FlightBooking.enums.Cities;
+import com.FlightBooking.enums.TripType;
+import com.FlightBooking.exception.FlightAlreadyExistsException;
+import com.FlightBooking.repository.FlightInventoryRepository;
+import com.FlightBooking.service.impl.FlightServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+class FlightServiceTest {
+
+	@Mock
+	private FlightInventoryRepository flightRepo;
+
+	@InjectMocks
+	private FlightServiceImpl flightService;
+
+	@BeforeEach
+	void setUp() {
+		MockitoAnnotations.openMocks(this);
+	}
+
+	private FlightRequest buildRequest() {
+		FlightRequest req = new FlightRequest();
+		req.setAirlineId("AIRLINE_ID");
+		req.setAirlineCode("AI");
+		req.setAirlineName("AirIndia");
+		req.setAirlineLogoUrl("https://example.com/logo.png");
+		req.setFlightCode("AI201");
+		req.setFromCity(Cities.DELHI);
+		req.setToCity(Cities.MUMBAI);
+		req.setDepartureTime(LocalDateTime.of(2025, 12, 1, 10, 0));
+		req.setPrice(5500f);
+		req.setTotalSeats(120);
+		return req;
+	}
+
+	@Test
+	void addFlightToInventory_success() {
+		FlightRequest req = buildRequest();
+
+		FlightInventory saved = new FlightInventory();
+		saved.setId("FLIGHT_ID");
+		saved.setAirlineId(req.getAirlineId());
+		saved.setAirlineCode(req.getAirlineCode());
+		saved.setAirlineName(req.getAirlineName());
+		saved.setAirlineLogoUrl(req.getAirlineLogoUrl());
+		saved.setFlightCode(req.getFlightCode());
+		saved.setFromCity(req.getFromCity());
+		saved.setToCity(req.getToCity());
+		saved.setDepartureTime(req.getDepartureTime());
+		saved.setPrice(req.getPrice());
+		saved.setTotalSeats(req.getTotalSeats());
+		saved.setAvailableSeats(req.getTotalSeats());
+
+		when(flightRepo.existsByFlightCode("AI201")).thenReturn(Mono.just(false));
+		when(flightRepo.save(any(FlightInventory.class))).thenReturn(Mono.just(saved));
+
+		Mono<FlightResponse> result = flightService.addFlightToInventory(req);
+
+		StepVerifier.create(result)
+				.expectNextMatches(resp -> "FLIGHT_ID".equals(resp.getId()) && "AI201".equals(resp.getFlightCode()))
+				.verifyComplete();
+	}
+
+	@Test
+	void addFlightToInventory_duplicateFlight_throwsException() {
+		FlightRequest req = buildRequest();
+
+		when(flightRepo.existsByFlightCode("AI201")).thenReturn(Mono.just(true));
+
+		Mono<FlightResponse> result = flightService.addFlightToInventory(req);
+
+		StepVerifier.create(result).expectError(FlightAlreadyExistsException.class).verify();
+	}
+
+	@Test
+	void addFlightToInventory_sameSourceAndDestination_throwsException() {
+		FlightRequest req = buildRequest();
+		req.setToCity(Cities.DELHI); // same as fromCity
+
+		Mono<FlightResponse> result = flightService.addFlightToInventory(req);
+
+		StepVerifier.create(result).expectError(IllegalArgumentException.class).verify();
+	}
+
+	@Test
+	void searchFlights_oneWay_success() {
+		FlightSearchRequest request = new FlightSearchRequest();
+		request.setFromCity(Cities.DELHI);
+		request.setToCity(Cities.MUMBAI);
+		request.setJourneyDate(LocalDate.of(2025, 12, 1));
+		request.setTripType(TripType.ONE_WAY);
+
+		FlightInventory fi = new FlightInventory();
+		fi.setId("FLIGHT_ID");
+		fi.setAirlineId("AIRLINE_ID");
+		fi.setAirlineCode("AI");
+		fi.setAirlineName("AirIndia");
+		fi.setFlightCode("AI201");
+		fi.setFromCity(Cities.DELHI);
+		fi.setToCity(Cities.MUMBAI);
+		fi.setDepartureTime(LocalDateTime.of(2025, 12, 1, 10, 0));
+		fi.setPrice(5500f);
+		fi.setTotalSeats(120);
+		fi.setAvailableSeats(110);
+
+		when(flightRepo.findByFromCityAndToCityAndDepartureTimeBetween(any(), any(), any(), any()))
+				.thenReturn(Flux.just(fi));
+
+		Mono<FlightSearchResultResponse> result = flightService.searchFlights(request);
+
+		StepVerifier.create(result).assertNext(resp -> {
+			List<FlightResponse> onward = resp.getOnwardFlights();
+			assert onward.size() == 1;
+			FlightResponse fr = onward.get(0);
+			assert "AI201".equals(fr.getFlightCode());
+		}).verifyComplete();
+	}
+
+}

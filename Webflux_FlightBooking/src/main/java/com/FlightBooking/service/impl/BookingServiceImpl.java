@@ -1,6 +1,5 @@
 package com.FlightBooking.service.impl;
 
-
 import com.FlightBooking.dto.request.BookingRequest;
 import com.FlightBooking.dto.request.PassengerRequest;
 import com.FlightBooking.dto.response.BookingResponse;
@@ -35,202 +34,181 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
 
-    private final BookingRepository bookingRepo;
-    private final FlightInventoryRepository flightRepo;
-    private final AirlineRepository airlineRepo;
+	private final BookingRepository bookingRepo;
+	private final FlightInventoryRepository flightRepo;
+	private final AirlineRepository airlineRepo;
 
-    @Override
-    public Mono<BookingResponse> bookTicket(String flightId, BookingRequest request) {
+	@Override
+	public Mono<BookingResponse> bookTicket(String flightId, BookingRequest request) {
 
-        // basic business validations (beyond @Valid)
-        if (request.getNumberOfSeats() < 1) {
-            return Mono.error(new IllegalArgumentException("At least one seat must be booked"));
-        }
+		// basic business validations (beyond @Valid)
+		if (request.getNumberOfSeats() < 1) {
+			return Mono.error(new IllegalArgumentException("At least one seat must be booked"));
+		}
 
-        if (request.getPassengers() == null || request.getPassengers().isEmpty()) {
-            return Mono.error(new IllegalArgumentException("At least one passenger is required"));
-        }
+		if (request.getPassengers() == null || request.getPassengers().isEmpty()) {
+			return Mono.error(new IllegalArgumentException("At least one passenger is required"));
+		}
 
-        if (request.getNumberOfSeats() != request.getPassengers().size()) {
-            return Mono.error(new IllegalArgumentException("Number of seats must match number of passengers"));
-        }
+		if (request.getNumberOfSeats() != request.getPassengers().size()) {
+			return Mono.error(new IllegalArgumentException("Number of seats must match number of passengers"));
+		}
 
-        // no duplicate seat numbers
-        long distinctSeats = request.getPassengers().stream()
-                .map(PassengerRequest::getSeatNumber)
-                .distinct()
-                .count();
-        if (distinctSeats != request.getPassengers().size()) {
-            return Mono.error(new IllegalArgumentException("Seat numbers must be unique per booking"));
-        }
+		// no duplicate seat numbers
+		long distinctSeats = request.getPassengers().stream().map(PassengerRequest::getSeatNumber).distinct().count();
+		if (distinctSeats != request.getPassengers().size()) {
+			return Mono.error(new IllegalArgumentException("Seat numbers must be unique per booking"));
+		}
 
-        return flightRepo.findById(flightId)
-                .switchIfEmpty(Mono.error(new FlightNotFoundException("Flight not found")))
-                .flatMap(flight -> {
+		return flightRepo.findById(flightId).switchIfEmpty(Mono.error(new FlightNotFoundException("Flight not found")))
+				.flatMap(flight -> {
 
-                    // journey date should match flight departure date
-                    if (!request.getJourneyDate().equals(flight.getDepartureTime().toLocalDate())) {
-                        return Mono.error(new IllegalArgumentException("Journey date does not match flight date"));
-                    }
+					// journey date should match flight departure date
+					if (!request.getJourneyDate().equals(flight.getDepartureTime().toLocalDate())) {
+						return Mono.error(new IllegalArgumentException("Journey date does not match flight date"));
+					}
 
-                    // cannot book for flights already departed
-                    if (flight.getDepartureTime().isBefore(LocalDateTime.now())) {
-                        return Mono.error(new IllegalArgumentException("Cannot book for a past departure time"));
-                    }
+					// cannot book for flights already departed
+					if (flight.getDepartureTime().isBefore(LocalDateTime.now())) {
+						return Mono.error(new IllegalArgumentException("Cannot book for a past departure time"));
+					}
 
-                    // seats availability check
-                    if (flight.getAvailableSeats() < request.getNumberOfSeats()) {
-                        return Mono.error(new SeatsNotAvailableException("Not enough available seats"));
-                    }
+					// seats availability check
+					if (flight.getAvailableSeats() < request.getNumberOfSeats()) {
+						return Mono.error(new SeatsNotAvailableException("Not enough available seats"));
+					}
 
-                    // reduce seats
-                    flight.setAvailableSeats(flight.getAvailableSeats() - request.getNumberOfSeats());
+					// reduce seats
+					flight.setAvailableSeats(flight.getAvailableSeats() - request.getNumberOfSeats());
 
-                    // create booking
-                    String pnr = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+					// create booking
+					String pnr = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
 
-                    Booking booking = new Booking();
-                    booking.setPnr(pnr);
-                    booking.setFlightId(flightId);
-                    booking.setUserEmail(request.getUserEmail());
-                    booking.setTripType(request.getTripType());
-                    booking.setMealType(request.getMealType());
-                    booking.setStatus(BookingStatus.BOOKED);
-                    booking.setJourneyDate(request.getJourneyDate());
-                    booking.setReturnDate(request.getReturnDate());
-                    booking.setNumberOfSeats(request.getNumberOfSeats());
-                    booking.setBookingDateTime(LocalDateTime.now());
+					Booking booking = new Booking();
+					booking.setPnr(pnr);
+					booking.setFlightId(flightId);
+					booking.setUserEmail(request.getUserEmail());
+					booking.setTripType(request.getTripType());
+					booking.setMealType(request.getMealType());
+					booking.setStatus(BookingStatus.BOOKED);
+					booking.setJourneyDate(request.getJourneyDate());
+					booking.setReturnDate(request.getReturnDate());
+					booking.setNumberOfSeats(request.getNumberOfSeats());
+					booking.setBookingDateTime(LocalDateTime.now());
 
-                    // map passengers
-                    List<Passenger> passengers = request.getPassengers().stream()
-                            .map(pr -> toPassenger(pr, pnr))
-                            .collect(Collectors.toList());
-                    booking.setPassengers(passengers);
+					// map passengers
+					List<Passenger> passengers = request.getPassengers().stream().map(pr -> toPassenger(pr, pnr))
+							.collect(Collectors.toList());
+					booking.setPassengers(passengers);
 
-                    return flightRepo.save(flight)
-                            .then(bookingRepo.save(booking))
-                            .map(saved -> {
-                                BookingResponse resp = new BookingResponse();
-                                resp.setPnr(saved.getPnr());
-                                resp.setStatus(saved.getStatus());
-                                return resp;   // minimal response
-                            });
-                });
-    }
+					return flightRepo.save(flight).then(bookingRepo.save(booking)).map(saved -> {
+						BookingResponse resp = new BookingResponse();
+						resp.setPnr(saved.getPnr());
+						resp.setStatus(saved.getStatus());
+						return resp; // minimal response
+					});
+				});
+	}
 
-    private Passenger toPassenger(PassengerRequest pr, String bookingId) {
-        Passenger p = new Passenger();
-        p.setName(pr.getName());
-        p.setGender(pr.getGender());
-        p.setAge(pr.getAge());
-        p.setEmail(pr.getEmail());
-        p.setContactNumber(pr.getContactNumber());
-        p.setSeatNumber(pr.getSeatNumber());
-        p.setBookingId(bookingId);
-        return p;
-    }
+	private Passenger toPassenger(PassengerRequest pr, String bookingId) {
+		Passenger p = new Passenger();
+		p.setName(pr.getName());
+		p.setGender(pr.getGender());
+		p.setAge(pr.getAge());
+		p.setEmail(pr.getEmail());
+		p.setContactNumber(pr.getContactNumber());
+		p.setSeatNumber(pr.getSeatNumber());
+		p.setBookingId(bookingId);
+		return p;
+	}
 
-    private PassengerResponse toPassengerResponse(Passenger p) {
-        PassengerResponse resp = new PassengerResponse();
-        resp.setName(p.getName());
-        resp.setGender(p.getGender());
-        resp.setAge(p.getAge());
-        resp.setEmail(p.getEmail());
-        resp.setContactNumber(p.getContactNumber());
-        resp.setSeatNumber(p.getSeatNumber());
-        return resp;
-    }
+	private PassengerResponse toPassengerResponse(Passenger p) {
+		PassengerResponse resp = new PassengerResponse();
+		resp.setName(p.getName());
+		resp.setGender(p.getGender());
+		resp.setAge(p.getAge());
+		resp.setEmail(p.getEmail());
+		resp.setContactNumber(p.getContactNumber());
+		resp.setSeatNumber(p.getSeatNumber());
+		return resp;
+	}
 
-    @Override
-    public Mono<TicketDetailResponse> getTicketDetails(String pnr) {
-        return bookingRepo.findByPnr(pnr)
-                .switchIfEmpty(Mono.error(new BookingNotFoundException(
-                        "Booking not found for PNR: " + pnr)))
-                .flatMap(booking ->
-                        flightRepo.findById(booking.getFlightId())
-                                .switchIfEmpty(Mono.error(new FlightNotFoundException(
-                                        "Flight not found for booking")))
-                                .flatMap(flight ->
-                                        airlineRepo.findById(flight.getAirlineId())
-                                                // if airline somehow missing, we still error
-                                                .switchIfEmpty(Mono.error(new FlightNotFoundException(
-                                                        "Airline not found for flight")))
-                                                .map(airline -> {
+	@Override
+	public Mono<TicketDetailResponse> getTicketDetails(String pnr) {
+		return bookingRepo.findByPnr(pnr)
+				.switchIfEmpty(Mono.error(new BookingNotFoundException("Booking not found for PNR: " + pnr)))
+				.flatMap(booking -> flightRepo.findById(booking.getFlightId())
+						.switchIfEmpty(Mono.error(new FlightNotFoundException("Flight not found for booking")))
+						.flatMap(flight -> airlineRepo.findById(flight.getAirlineId())
+								// if airline somehow missing, we still error
+								.switchIfEmpty(Mono.error(new FlightNotFoundException("Airline not found for flight")))
+								.map(airline -> {
 
-                                                    TicketDetailResponse resp = new TicketDetailResponse();
+									TicketDetailResponse resp = new TicketDetailResponse();
 
-                                                    resp.setPnr(booking.getPnr());
-                                                    resp.setStatus(booking.getStatus());
-                                                    resp.setFlightCode(flight.getFlightCode());
-                                                    resp.setAirlineName(flight.getAirlineName());
-                                                    resp.setFromCity(flight.getFromCity());
-                                                    resp.setToCity(flight.getToCity());
-                                                    resp.setDepartureTime(flight.getDepartureTime());
-                                                    resp.setJourneyDate(booking.getJourneyDate());
-                                                    resp.setReturnDate(booking.getReturnDate());
-                                                    resp.setNumberOfSeats(booking.getNumberOfSeats());
+									resp.setPnr(booking.getPnr());
+									resp.setStatus(booking.getStatus());
+									resp.setFlightCode(flight.getFlightCode());
+									resp.setAirlineName(flight.getAirlineName());
+									resp.setFromCity(flight.getFromCity());
+									resp.setToCity(flight.getToCity());
+									resp.setDepartureTime(flight.getDepartureTime());
+									resp.setJourneyDate(booking.getJourneyDate());
+									resp.setReturnDate(booking.getReturnDate());
+									resp.setNumberOfSeats(booking.getNumberOfSeats());
 
-                                                    // passengers
-                                                    resp.setPassengers(
-                                                            booking.getPassengers()
-                                                                    .stream()
-                                                                    .map(p -> {
-                                                                        PassengerResponse pr = new PassengerResponse();
-                                                                        pr.setName(p.getName());
-                                                                        pr.setSeatNumber(p.getSeatNumber());
-                                                                        return pr;
-                                                                    })
-                                                                    .toList()
-                                                    );
+									// passengers
+									resp.setPassengers(booking.getPassengers().stream().map(p -> {
+										PassengerResponse pr = new PassengerResponse();
+										pr.setName(p.getName());
+										pr.setSeatNumber(p.getSeatNumber());
+										return pr;
+									}).toList());
 
-                                                    return resp;
-                                                })
-                                )
-                );
-    }
+									return resp;
+								})));
+	}
 
-    @Override
-    public Flux<TicketDetailResponse> getBookingHistory(String emailId) {
-        return bookingRepo.findByUserEmail(emailId)
-                .flatMap(booking -> getTicketDetails(booking.getPnr()));
-    }
+	@Override
+	public Flux<TicketDetailResponse> getBookingHistory(String emailId) {
+		return bookingRepo.findByUserEmail(emailId).flatMap(booking -> getTicketDetails(booking.getPnr()));
+	}
 
-    @Override
-    public Mono<BookingResponse> cancelBooking(String pnr) {
+	@Override
+	public Mono<BookingResponse> cancelBooking(String pnr) {
 
-        return bookingRepo.findByPnr(pnr)
-                .switchIfEmpty(Mono.error(new BookingNotFoundException("Booking not found for PNR: " + pnr)))
-                .flatMap(booking -> {
+		return bookingRepo.findByPnr(pnr)
+				.switchIfEmpty(Mono.error(new BookingNotFoundException("Booking not found for PNR: " + pnr)))
+				.flatMap(booking -> {
 
-                    // already cancelled
-                    if (booking.getStatus() == BookingStatus.CANCELLED) {
-                        return Mono.error(new CancellationNotAllowedException("Booking is already cancelled"));
-                    }
+					// already cancelled
+					if (booking.getStatus() == BookingStatus.CANCELLED) {
+						return Mono.error(new CancellationNotAllowedException("Booking is already cancelled"));
+					}
 
-                    return flightRepo.findById(booking.getFlightId())
-                            .switchIfEmpty(Mono.error(new FlightNotFoundException("Flight not found for booking")))
-                            .flatMap(flight -> {
+					return flightRepo.findById(booking.getFlightId())
+							.switchIfEmpty(Mono.error(new FlightNotFoundException("Flight not found for booking")))
+							.flatMap(flight -> {
 
-                                // 24-hour rule based on flight departure time
-                                long hoursDiff = Duration.between(LocalDateTime.now(), flight.getDepartureTime()).toHours();
-                                if (hoursDiff < 24) {
-                                    return Mono.error(new CancellationNotAllowedException(
-                                            "Cannot cancel within 24 hours of departure"));
-                                }
+								// 24-hour rule based on flight departure time
+								long hoursDiff = Duration.between(LocalDateTime.now(), flight.getDepartureTime())
+										.toHours();
+								if (hoursDiff < 24) {
+									return Mono.error(new CancellationNotAllowedException(
+											"Cannot cancel within 24 hours of departure"));
+								}
 
-                                // return seats
-                                flight.setAvailableSeats(flight.getAvailableSeats() + booking.getNumberOfSeats());
-                                booking.setStatus(BookingStatus.CANCELLED);
+								// return seats
+								flight.setAvailableSeats(flight.getAvailableSeats() + booking.getNumberOfSeats());
+								booking.setStatus(BookingStatus.CANCELLED);
 
-                                return flightRepo.save(flight)
-                                        .then(bookingRepo.save(booking))
-                                        .map(saved -> {
-                                            BookingResponse resp = new BookingResponse();
-                                            resp.setPnr(saved.getPnr());
-                                            resp.setStatus(saved.getStatus());
-                                            return resp;
-                                        });
-                            });
-                });
-    }
+								return flightRepo.save(flight).then(bookingRepo.save(booking)).map(saved -> {
+									BookingResponse resp = new BookingResponse();
+									resp.setPnr(saved.getPnr());
+									resp.setStatus(saved.getStatus());
+									return resp;
+								});
+							});
+				});
+	}
 }

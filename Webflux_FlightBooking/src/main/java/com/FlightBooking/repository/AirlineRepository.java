@@ -1,6 +1,5 @@
 package com.FlightBooking.repository;
 
-
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.stereotype.Repository;
 
@@ -11,5 +10,5 @@ import reactor.core.publisher.Mono;
 @Repository
 public interface AirlineRepository extends ReactiveMongoRepository<Airline, String> {
 
-    Mono<Boolean> existsByAirlineCode(String airlineCode);
+	Mono<Boolean> existsByAirlineCode(String airlineCode);
 }

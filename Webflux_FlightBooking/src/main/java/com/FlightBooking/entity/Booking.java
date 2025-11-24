@@ -1,8 +1,5 @@
 package com.FlightBooking.entity;
 
-
-
-
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -19,21 +16,21 @@ import java.util.List;
 @Document(collection = "bookings")
 public class Booking {
 
-    @Id
-    private String pnr;                
+	@Id
+	private String pnr;
 
-    private String flightId;           
-    private String userEmail;          
+	private String flightId;
+	private String userEmail;
 
-    private TripType tripType;         
-    private MealType mealType;        
-    private BookingStatus status;      
+	private TripType tripType;
+	private MealType mealType;
+	private BookingStatus status;
 
-    private LocalDate journeyDate;
-    private LocalDate returnDate;      
+	private LocalDate journeyDate;
+	private LocalDate returnDate;
 
-    private int numberOfSeats;
-    private List<Passenger> passengers; 
+	private int numberOfSeats;
+	private List<Passenger> passengers;
 
-    private LocalDateTime bookingDateTime;
+	private LocalDateTime bookingDateTime;
 }

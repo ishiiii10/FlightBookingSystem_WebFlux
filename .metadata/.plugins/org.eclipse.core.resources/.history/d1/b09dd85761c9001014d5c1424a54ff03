@@ -1,0 +1,59 @@
+package com.FlightBooking.controller;
+
+package com.FlightBooking.controller;
+
+import com.FlightBooking.dto.request.AirlineRequest;
+import com.FlightBooking.dto.response.AirlineResponse;
+import com.FlightBooking.service.AirlineService;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Mono;
+
+@WebFluxTest(controllers = FlightBookingController.class)
+class AirlineControllerTest {
+
+    @Autowired
+    private WebTestClient webTestClient;
+
+    @MockBean
+    private AirlineService airlineService;
+
+    // also mock other services used by controller
+    @MockBean
+    private com.FlightBooking.service.FlightService flightService;
+
+    @MockBean
+    private com.FlightBooking.service.BookingService bookingService;
+
+    @Test
+    void createAirline_returns201AndBody() {
+        AirlineRequest req = new AirlineRequest();
+        req.setAirlineCode("AI");
+        req.setName("AirIndia");
+        req.setEmail("support@airindia.in");
+        req.setLogoUrl("https://example.com/logo.png");
+        req.setActive(true);
+
+        AirlineResponse resp = new AirlineResponse();
+        resp.setId("123");
+        resp.setAirlineCode("AI");
+
+        Mockito.when(airlineService.createAirline(Mockito.any(AirlineRequest.class)))
+                .thenReturn(Mono.just(resp));
+
+        webTestClient.post()
+                .uri("/api/v1.0/flight/airline")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(req)
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody()
+                .jsonPath("$.id").isEqualTo("123")
+                .jsonPath("$.airlineCode").isEqualTo("AI");
+    }
+}
