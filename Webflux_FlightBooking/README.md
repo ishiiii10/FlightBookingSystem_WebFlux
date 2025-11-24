@@ -107,28 +107,36 @@ Booking Controller + Service tests
 ```
 ## 📌 Postman APIs 
 ### Create Airline
-<img width="1460" height="839" alt="Screenshot 2025-11-24 at 7 53 57 PM" src="https://github.com/user-attachments/assets/6c53e5ef-fb51-432b-a4c9-30c10bc413c8" />
+<img width="1433" height="845" alt="Screenshot 2025-11-25 at 3 29 56 AM" src="https://github.com/user-attachments/assets/1719388a-0ec5-4edb-8373-2c91cc30d2a2" />
+
 
 ### Fetch Airline
-<img width="1349" height="882" alt="Screenshot 2025-11-25 at 2 40 16 AM" src="https://github.com/user-attachments/assets/3e94de59-61d8-4e15-9a20-b6dbad64b786" />
+<img width="1396" height="806" alt="Screenshot 2025-11-25 at 3 30 25 AM" src="https://github.com/user-attachments/assets/36ae4967-c0e4-49bb-baea-881275b5221c" />
 
 ### Add Flight to Inventory
-<img width="1335" height="773" alt="Screenshot 2025-11-25 at 2 40 25 AM" src="https://github.com/user-attachments/assets/1d82faab-1778-4de7-b5d7-d23be335e082" />
+<img width="1388" height="802" alt="Screenshot 2025-11-25 at 3 30 59 AM" src="https://github.com/user-attachments/assets/95bdbe36-56c8-4df7-98b2-b2286ddad60a" />
+
 
 ### Search Flight
-<img width="1452" height="863" alt="Screenshot 2025-11-25 at 2 40 44 AM" src="https://github.com/user-attachments/assets/db769d15-da0d-4876-9c91-feaa96b2fde3" />
+<img width="1445" height="813" alt="Screenshot 2025-11-25 at 3 32 02 AM" src="https://github.com/user-attachments/assets/d961ee0a-ed40-4c96-bc80-c329d0efffe9" />
+
+
 
 ### Book Flight
-<img width="1454" height="801" alt="Screenshot 2025-11-25 at 2 40 59 AM" src="https://github.com/user-attachments/assets/ffaede5b-ddbc-4bda-9cf1-0577fdbaf41a" />
+<img width="1462" height="813" alt="Screenshot 2025-11-25 at 3 33 25 AM" src="https://github.com/user-attachments/assets/b63b8b12-8e45-44cb-beaa-a3ddca670f7e" />
+
 
 ### Get Ticket
-<img width="1367" height="837" alt="Screenshot 2025-11-25 at 2 41 08 AM" src="https://github.com/user-attachments/assets/2f25d968-44c4-4785-b323-20473a8a70d2" />
+<img width="1379" height="857" alt="Screenshot 2025-11-25 at 3 33 59 AM" src="https://github.com/user-attachments/assets/57a1556c-ea72-459b-91e5-bb28e46e6fa5" />
+
 
 ### Get history
-<img width="1464" height="861" alt="Screenshot 2025-11-25 at 2 41 15 AM" src="https://github.com/user-attachments/assets/106b9bd5-433f-4e96-a5b5-298f625d4388" />
+<img width="1358" height="843" alt="Screenshot 2025-11-25 at 3 34 13 AM" src="https://github.com/user-attachments/assets/f3e24295-dc7f-42ca-9eee-a26a1f78a781" />
+
 
 ### Cancel Booking
-<img width="1426" height="828" alt="Screenshot 2025-11-25 at 2 48 11 AM" src="https://github.com/user-attachments/assets/ed39b3a7-08af-435a-9314-6c6843da2fdc" />
+<img width="1399" height="821" alt="Screenshot 2025-11-25 at 3 34 40 AM" src="https://github.com/user-attachments/assets/43b63d81-8028-4e1b-b7dc-e2f1ff02033d" />
+
 
 ## 📌 Database Schema Diagram
 
@@ -148,8 +156,6 @@ Booking Controller + Service tests
 <img width="822" height="436" alt="Screenshot 2025-11-25 at 2 27 19 AM" src="https://github.com/user-attachments/assets/37670bd0-293c-4644-8192-2b5e61edb9a7" />
 <img width="859" height="524" alt="Screenshot 2025-11-25 at 2 27 27 AM" src="https://github.com/user-attachments/assets/2bb00cc7-2a10-4599-8d26-62eff8cbeda7" />
 <img width="1469" height="446" alt="Screenshot 2025-11-25 at 2 27 40 AM" src="https://github.com/user-attachments/assets/fcda1305-e65e-4fa2-9abe-2cbeff5b4164" />
-
-
 
 
 
