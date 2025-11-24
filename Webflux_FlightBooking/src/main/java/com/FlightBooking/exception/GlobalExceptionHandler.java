@@ -51,6 +51,34 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.CONFLICT)  // 409
                 .body(new ErrorResponse(ex.getMessage()));
     }
+    
+    @ExceptionHandler(FlightNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleFlightNotFound(FlightNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(ex.getMessage()));
+    }
+
+    @ExceptionHandler(BookingNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleBookingNotFound(BookingNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(ex.getMessage()));
+    }
+
+    @ExceptionHandler(SeatsNotAvailableException.class)
+    public ResponseEntity<ErrorResponse> handleSeatsNotAvailable(SeatsNotAvailableException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)  // state conflict: not enough seats
+                .body(new ErrorResponse(ex.getMessage()));
+    }
+
+    @ExceptionHandler(CancellationNotAllowedException.class)
+    public ResponseEntity<ErrorResponse> handleCancellationNotAllowed(CancellationNotAllowedException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)  // conflict: booking cannot be cancelled
+                .body(new ErrorResponse(ex.getMessage()));
+    }
 
     // 4) Generic business logic errors (e.g. source == destination later)
     @ExceptionHandler(IllegalArgumentException.class)
