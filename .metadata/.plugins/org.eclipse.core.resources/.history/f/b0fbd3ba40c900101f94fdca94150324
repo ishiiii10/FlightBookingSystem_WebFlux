@@ -41,7 +41,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleAirlineExists(AirlineAlreadyExistsException ex) {
         
         return ResponseEntity
-                .status(HttpStatus.CONFLICT)
+                .status(HttpStatus.NOT_FOUND)
                 .body(new ErrorResponse(ex.getMessage()));
     }
 
