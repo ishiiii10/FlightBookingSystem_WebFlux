@@ -1,0 +1,62 @@
+package com.FlightBooking.controller;
+
+import com.FlightBooking.dto.request.AirlineRequest;
+import com.FlightBooking.dto.response.AirlineResponse;
+import com.FlightBooking.service.AirlineService;
+import com.FlightBooking.service.BookingService;
+import com.FlightBooking.service.FlightService;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+
+import org.junit.jupiter.api.Test;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webflux.test.autoconfigure.WebFluxTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Mono;
+
+
+
+	@WebFluxTest(controllers = FlightBookingController.class)
+	class AirlineControllerTest {
+
+	    @Autowired
+	    private WebTestClient webTestClient;
+
+	    @MockitoBean
+	    private AirlineService airlineService;
+
+	    @MockitoBean
+	    private FlightService flightService;
+
+	    @MockitoBean
+	    private BookingService bookingService;
+
+	    @Test
+	    void createAirline_returns201AndBody() {
+	        AirlineRequest req = new AirlineRequest();
+	        req.setAirlineCode("AI"); req.setName("AirIndia");
+	        req.setEmail("support@airindia.in"); req.setLogoUrl("https://example.com/logo.png");
+	        req.setActive(true);
+
+	        AirlineResponse resp = new AirlineResponse();
+	        resp.setId("123"); resp.setAirlineCode("AI");
+
+	        when(airlineService.createAirline(any(AirlineRequest.class)))
+	            .thenReturn(Mono.just(resp));
+
+	        webTestClient.post()
+	            .uri("/api/v1.0/flight/airline")
+	            .contentType(MediaType.APPLICATION_JSON)
+	            .bodyValue(req)
+	            .exchange()
+	            .expectStatus().isCreated()
+	            .expectBody()
+	            .jsonPath("$.id").isEqualTo("123")
+	            .jsonPath("$.airlineCode").isEqualTo("AI");
+	    }
+	}

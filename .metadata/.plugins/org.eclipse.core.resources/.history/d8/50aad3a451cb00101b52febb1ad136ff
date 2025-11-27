@@ -1,0 +1,145 @@
+package com.FlightBooking.exceptions;
+
+import com.FlightBooking.dto.response.ErrorResponse;
+import com.FlightBooking.exception.*;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.support.WebExchangeBindException;
+
+import java.util.Collections;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
+
+class GlobalExceptionHandlerTest {
+
+    private GlobalExceptionHandler handler;
+
+    @BeforeEach
+    void setUp() {
+        handler = new GlobalExceptionHandler();
+    }
+
+    // -----------------------------------------
+    // EXCEPTIONS THAT RETURN ErrorResponse
+    // -----------------------------------------
+
+    @Test
+    void handleAirlineExists_returns409() {
+        AirlineAlreadyExistsException ex = new AirlineAlreadyExistsException("Airline exists");
+
+        ResponseEntity<ErrorResponse> resp = handler.handleAirlineExists(ex);
+
+        assertEquals(409, resp.getStatusCode());
+        assertEquals("Airline exists", resp.getBody().getMessage());
+    }
+
+    @Test
+    void handleFlightExists_returns409() {
+        FlightAlreadyExistsException ex = new FlightAlreadyExistsException("Flight exists");
+
+        ResponseEntity<ErrorResponse> resp = handler.handleFlightExists(ex);
+
+        assertEquals(409, resp.getStatusCode());
+        assertEquals("Flight exists", resp.getBody().getMessage());
+    }
+
+    @Test
+    void handleFlightNotFound_returns404() {
+        FlightNotFoundException ex = new FlightNotFoundException("Flight not found");
+
+        ResponseEntity<ErrorResponse> resp = handler.handleFlightNotFound(ex);
+
+        assertEquals(404, resp.getStatusCode());
+        assertEquals("Flight not found", resp.getBody().getMessage());
+    }
+
+    @Test
+    void handleBookingNotFound_returns404() {
+        BookingNotFoundException ex = new BookingNotFoundException("Booking not found");
+
+        ResponseEntity<ErrorResponse> resp = handler.handleBookingNotFound(ex);
+
+        assertEquals(404, resp.getStatusCode());
+        assertEquals("Booking not found", resp.getBody().getMessage());
+    }
+
+    @Test
+    void handleSeatsNotAvailable_returns400() {
+        SeatsNotAvailableException ex = new SeatsNotAvailableException("No seats available");
+
+        ResponseEntity<ErrorResponse> resp = handler.handleSeatsNotAvailable(ex);
+
+        assertEquals(400, resp.getStatusCode());
+        assertEquals("No seats available", resp.getBody().getMessage());
+    }
+
+    @Test
+    void handleCancellationNotAllowed_returns409() {
+        CancellationNotAllowedException ex =
+                new CancellationNotAllowedException("Cancellation not allowed");
+
+        ResponseEntity<ErrorResponse> resp = handler.handleCancellationNotAllowed(ex);
+
+        assertEquals(409, resp.getStatusCode());
+        assertEquals("Cancellation not allowed", resp.getBody().getMessage());
+    }
+
+    @Test
+    void handleIllegalArgument_returns400() {
+        IllegalArgumentException ex = new IllegalArgumentException("Bad arg");
+
+        ResponseEntity<ErrorResponse> resp = handler.handleIllegalArgument(ex);
+
+        assertEquals(400, resp.getStatusCode());
+        assertEquals("Bad arg", resp.getBody().getMessage());
+    }
+
+    // -----------------------------------------
+    // VALIDATION HANDLERS RETURN Map<String,String>
+    // -----------------------------------------
+
+    @Test
+    void handleMethodArgumentNotValid_returnsMap() {
+
+        BindingResult br = Mockito.mock(BindingResult.class);
+        FieldError fe = new FieldError("airlineRequest", "airlineCode", "airlineCode must not be blank");
+
+        when(br.getAllErrors()).thenReturn(Collections.singletonList(fe));
+
+        MethodArgumentNotValidException ex = Mockito.mock(MethodArgumentNotValidException.class);
+        when(ex.getBindingResult()).thenReturn(br);
+
+        // VALIDATION returns Map<String,String>
+        ResponseEntity<Map<String,String>> resp = handler.handleMethodArgumentNotValid(ex);
+
+        assertEquals(400, resp.getStatusCode());
+        assertTrue(resp.getBody().containsKey("airlineCode must not be blank"));
+    }
+
+    @Test
+    void handleWebFluxValidationErrors_returnsMap() {
+
+        BindingResult br = Mockito.mock(BindingResult.class);
+        FieldError fe =
+                new FieldError("bookingRequest", "userEmail", "must be a well-formed email");
+
+        when(br.getAllErrors()).thenReturn(Collections.singletonList(fe));
+
+        WebExchangeBindException ex = Mockito.mock(WebExchangeBindException.class);
+        when(ex.getBindingResult()).thenReturn(br);
+
+        ResponseEntity<Map<String,String>> resp =
+                handler.handleWebFluxValidationErrors(ex);
+
+        assertEquals(400, resp.getStatusCode());
+        assertTrue(resp.getBody().containsKey("must be a well-formed email"));
+    }
+}

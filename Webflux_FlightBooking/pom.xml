@@ -29,6 +29,11 @@
 	</scm>
 	<properties>
 		<java.version>17</java.version>
+		
+<sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+		<sonar.coverage.jacoco.xmlReportPaths>
+			${project.build.directory}/jacoco-output/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+
 	</properties>
 	<dependencies>
 		<dependency>
@@ -89,6 +94,13 @@
         <artifactId>reactor-test</artifactId>
         <scope>test</scope>
     </dependency>
+    <!-- Mockito JUnit 5 integration (optional if you want explicit) -->
+<dependency>
+  <groupId>org.mockito</groupId>
+  <artifactId>mockito-junit-jupiter</artifactId>
+  <version>5.5.0</version>
+  <scope>test</scope>
+</dependency>
 		
 </dependencies>
 
